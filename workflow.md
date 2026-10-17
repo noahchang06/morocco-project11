@@ -76,4 +76,4 @@ No deployment labels, model outputs, human agreement results or research accurac
 
 ## Verification status
 
-Thirteen automated tests pass, including a synthetic freeze-to-evaluation integration test. The generated review page passed JavaScript syntax validation. Browser interaction testing was attempted but the available local browser failed to launch, so passage selection/export still needs a manual browser check before live annotation.
+Fourteen automated tests pass, including a synthetic freeze-to-evaluation integration test and coverage for evidence metadata/edit controls. On 2026-10-17, Xichen completed a macOS/Chrome walkthrough with one Idarati record and two evidence passages: validation passed, and export/resume produced a byte-identical re-export. The revised record editing and deletion controls still need an independent teammate walkthrough before live annotation.
