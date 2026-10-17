@@ -1,0 +1,2 @@
+# Recorded corpus extractor. Installing PyMuPDF changes extractor precedence.
+pypdf==6.10.0

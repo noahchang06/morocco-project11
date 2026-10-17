@@ -1,0 +1,19 @@
+# Local environments, caches, credentials
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# Source corpus, extracted text, annotations and experiment outputs
+/data/
+/evidence-review.html
+/reviewer-packet*.html
+/reviewer-*.jsonl
+/model-predictions*.jsonl
+/adjudicated-*.jsonl
+/run_metadata.json
+*.zip

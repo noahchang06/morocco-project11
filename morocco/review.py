@@ -1,0 +1,46 @@
+"""Build offline evidence collection or prediction-free reviewer packets."""
+import argparse
+import json
+from pathlib import Path
+from .study import read_jsonl, validate
+
+
+def build(processed, output, records=None):
+    pages=read_jsonl(Path(processed)/'pages.jsonl')
+    if records is not None:
+        validate(records,pages)
+        data=[{k:r[k] for k in ('record_id','organization','use_case','moroccan_location','evidence') if k in r} for r in records]
+        for r in data:
+            r['evidence']=[{k:e.get(k) for k in ('quote','document_id','page','source_date','language')} for e in r['evidence']]
+        mode='labels'
+    else:
+        rows=read_jsonl(Path(processed)/'inventory.jsonl')
+        data=[{'title':r['path'],'pages':[p for p in pages if p['document_id']==r['document_id']]} for r in rows if 'document_id' in r]
+        mode='evidence'
+    payload=json.dumps(data,ensure_ascii=True).replace('<','\\u003c').replace('>','\\u003e').replace('&','\\u0026')
+    Path(output).write_text(HTML.replace('__DATA__',payload).replace('__MODE__',json.dumps(mode)),encoding='utf-8')
+
+HTML=r'''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Morocco evidence review</title>
+<style>body{font:16px system-ui;max-width:1050px;margin:30px auto;padding:20px;background:#f3f6f7;color:#193342}section{background:white;padding:20px;border-radius:12px;margin:20px 0}input,select,textarea,button{font:inherit;padding:9px;margin:5px;max-width:95%}label{display:block}button{background:#17516a;color:white;border:0;border-radius:6px;cursor:pointer}#text{white-space:pre-wrap;max-height:450px;overflow:auto;background:#eef3f5;padding:18px}#status{color:#8b3300}textarea{width:90%}</style>
+<h1>Morocco deployment review</h1><p id="intro"></p><p>Offline tool. Export before closing or reloading: work is held in memory, with no automatic save.</p>
+<section><input id="filter" placeholder="Filter documents"><select id="item"></select><div id="paging"><button id="prev">Previous page</button><span id="num"></span><button id="next">Next page</button></div><div id="text" dir="auto"></div><button id="capture">Use selected passage</button><p id="selection"></p></section>
+<section id="fields"><h2>Deployment details</h2><p>Verify extracted text against the PDF. Keep dates and negation in your selection.</p></section>
+<section id="labels"><h2>Independent label</h2><label>Reviewer ID <input id="reviewer"></label><label>Guide version <input id="guide" value="pilot-draft-1"></label><select id="label"><option value="">Choose label</option><option>operational</option><option>pilot</option><option>announced</option><option>insufficiently_supported</option></select><textarea id="rationale" placeholder="Rationale"></textarea></section>
+<section><button id="save">Save entry</button><button id="export">Export JSONL</button><label>Resume export <input id="resume" type="file" accept=".jsonl"></label><p id="status" role="status"></p></section>
+<script>
+const data=__DATA__,mode=__MODE__,$=id=>document.getElementById(id);let current=0,page=0,selected=null,saved={};const fields=['record_id','organization_id','organization','use_case','moroccan_location','source_date','source_type','language'];
+$('intro').textContent=mode==='evidence'?'Select exact evidence and record the organization, use case and Moroccan location. Reuse a record ID to add supporting passages.':'Label independently. No model predictions or other reviewers’ labels are included.';
+$('fields').hidden=mode!=='evidence';$('labels').hidden=mode!=='labels';$('capture').hidden=mode!=='evidence';$('paging').hidden=mode!=='evidence';$('filter').hidden=mode!=='evidence';
+for(const k of fields){const l=document.createElement('label');l.textContent=k.replaceAll('_',' ')+(fields.indexOf(k)>4?' (optional)':'');const input=document.createElement('input');input.id=k;if(k==='source_date')input.type='date';l.append(input);$('fields').append(l)}
+function status(s){$('status').textContent=s+' Saved entries: '+Object.keys(saved).length}
+function show(){selected=null;$('selection').textContent='';const d=data[current];if(!d)return;if(mode==='evidence'){$('text').textContent=d.pages[page]?.text||'[No extracted text; inspect PDF]';$('num').textContent=`Physical page ${page+1} / ${d.pages.length}`}else{$('text').textContent=JSON.stringify(d,null,2);$('label').value=saved[d.record_id]?.label||'';$('rationale').value=saved[d.record_id]?.rationale||''}}
+function refresh(){$('item').replaceChildren();data.forEach((d,i)=>{if(mode==='evidence'&&!d.title.toLowerCase().includes($('filter').value.toLowerCase()))return;const o=document.createElement('option');o.value=i;o.textContent=mode==='evidence'?d.title:d.record_id+' — '+d.organization;$('item').append(o)});if($('item').options.length){current=Number($('item').value);page=0;show()}else{$('text').textContent='No matching documents';selected=null}}
+$('filter').oninput=refresh;$('item').onchange=()=>{current=Number($('item').value);page=0;show()};$('prev').onclick=()=>{page=Math.max(0,page-1);show()};$('next').onclick=()=>{page=Math.min(data[current].pages.length-1,page+1);show()};
+$('capture').onclick=()=>{const s=window.getSelection();if(!s.rangeCount)return;const r=s.getRangeAt(0);if(!$('text').contains(r.startContainer)||!$('text').contains(r.endContainer))return;const before=r.cloneRange();before.selectNodeContents($('text'));before.setEnd(r.startContainer,r.startOffset);const quote=r.toString();if(!quote.trim())return;const start=Array.from(before.toString()).length;selected={...data[current].pages[page],start,end:start+Array.from(quote).length,quote};delete selected.text;$('selection').textContent=`Selected ${selected.end-start} characters on physical page ${selected.page}`};
+$('save').onclick=()=>{if(mode==='evidence'){if(!selected)return status('Select a passage first.');let r={};for(const k of fields.slice(0,5)){r[k]=$(k).value.trim();if(!r[k])return status('Complete '+k);}const old=saved[r.record_id];if(old&&fields.slice(1,5).some(k=>old[k]!==r[k]))return status('Record ID has conflicting deployment details.');r.evidence=old?.evidence||[];const e={...selected};for(const k of fields.slice(5))e[k]=$(k).value.trim()||null;if(!r.evidence.some(x=>x.document_id===e.document_id&&x.page===e.page&&x.start===e.start&&x.end===e.end))r.evidence.push(e);saved[r.record_id]=r;}else{const reviewer_id=$('reviewer').value.trim(),label=$('label').value,rationale=$('rationale').value.trim();if(!reviewer_id||!label||!rationale)return status('Reviewer, label and rationale required.');if(Object.values(saved).some(r=>r.reviewer_id!==reviewer_id))return status('Use one reviewer per export.');const record_id=data[current].record_id;saved[record_id]={record_id,reviewer_id,label,rationale,annotation_guide_version:$('guide').value};}status('Saved. Export before closing.');};
+$('export').onclick=()=>{if(!Object.keys(saved).length)return status('Nothing saved.');const u=URL.createObjectURL(new Blob([Object.values(saved).map(x=>JSON.stringify(x)).join('\n')+'\n'],{type:'application/x-ndjson'}));const a=document.createElement('a');a.href=u;a.download=mode==='evidence'?'records.jsonl':'reviewer-labels.jsonl';a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)};
+$('resume').onchange=async()=>{try{const rows=(await $('resume').files[0].text()).split(/\r?\n/).filter(x=>x.trim()).map(JSON.parse),next={};for(const r of rows){if(!r.record_id||next[r.record_id])throw Error('Missing or duplicate ID');if(mode==='evidence'&&!Array.isArray(r.evidence))throw Error('Expected evidence records');if(mode==='labels'&&(!r.reviewer_id||!data.some(d=>d.record_id===r.record_id)))throw Error('Wrong reviewer packet');next[r.record_id]=r;}saved=next;show();status('Imported.')}catch(e){status('Import failed: '+e.message)}};refresh();
+</script></html>'''
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--processed',default='data/processed');p.add_argument('--records');p.add_argument('--output',required=True);a=p.parse_args();build(a.processed,a.output,read_jsonl(a.records) if a.records else None)
