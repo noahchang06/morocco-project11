@@ -163,7 +163,7 @@ Processed data already exists; do not rebuild it merely to open the review tool.
 
 ```sh
 python3 -m morocco.ingest /Users/noah/Downloads/Morroco --output data/processed
-python3 -m morocco.pilot
+python3 -m morocco.pilot --processed data/processed --output data/pilot --plan-output pilot-plan.md
 python3 -m morocco.review --output evidence-review.html
 ```
 
@@ -335,7 +335,7 @@ The assignment context supplied in the Morocco chat calls for one **4–5-page c
 
 Suggested 3–4 planned visuals: (1) corpus/record eligibility flow and language/source table; (2) rule-versus-model scores with intervals and sample sizes; (3) confusion matrices and false-operational error categories; (4) English/French discovery overlap or sector distributions before/after filtering, depending on retained questions. An architecture figure can support Methods but does not replace the requested evaluation visuals.
 
-**Preliminary Results can already state:** 54 PDFs processed, 2,104 physical pages, 3,594 extracted chunks, zero file-level extraction exceptions, 372 empty extracted pages across 19 PDFs, ten PDFs with no meaningful extracted text, two encoding warnings, a proposed 20-document pilot, and 13 passing synthetic tests. Explain extraction limitations. Chunk counts are not deployment counts and test success is not research accuracy.
+**Preliminary Results can already state:** 54 PDFs processed, 2,104 physical pages, 3,594 extracted chunks, zero file-level extraction exceptions, 372 empty extracted pages across 19 PDFs, ten PDFs with no meaningful extracted text, two encoding warnings, a proposed 20-document pilot, and 17 passing automated tests. Explain extraction limitations. Chunk counts are not deployment counts and test success is not research accuracy.
 
 **To strengthen Preliminary Results before submission:** complete the calibration exercise and report actual eligible-record yield, excluded/context-only documents, organization/class counts, reviewer disagreements, guide revisions and, if ready, a clearly marked development-only baseline/model run. A small honest empirical pilot is more useful than claiming a finished system.
 

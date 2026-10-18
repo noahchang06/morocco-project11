@@ -1,7 +1,11 @@
-"""Reproducible proposal for a 20-document feasibility pilot, not a sampled benchmark."""
+"""Build the reproducible 20-document feasibility-pilot manifest."""
+import argparse
 import json
+import unicodedata
 from pathlib import Path
+
 from .study import read_jsonl
+
 
 SELECTION = [
 ('NVIDIA Datacenters.pdf','deployment lead','Infrastructure project reporting; verify stage and AI use-case eligibility.'),
@@ -26,25 +30,86 @@ SELECTION = [
 ('French/higher education.pdf','translation review','Possible counterpart to English education document; verify manually.')]
 
 
-def main():
-    root=Path('data/processed')
-    rows=read_jsonl(root/'inventory.jsonl'); pages=read_jsonl(root/'pages.jsonl')
-    by_path={r['path']:r for r in rows}
-    out=Path('data/pilot');out.mkdir(parents=True,exist_ok=True)
-    selected=[]
-    for name,role,reason in SELECTION:
-        r=by_path[name]
-        selected.append({'document_id':r['document_id'],'path':name,'role':role,'selection_reason':reason,'eligibility':'pending human review','empty_pages':r.get('empty_pages',[])})
-    (out/'selection.json').write_text(json.dumps(selected,indent=2,ensure_ascii=False)+'\n')
-    quality=[]
-    for r in rows:
-        texts=[p['text'] for p in pages if p['document_id']==r['document_id']]
-        text=''.join(texts)
-        controls=sum(ord(c)<32 and c not in '\n\r\t' for c in text)
-        quality.append({'path':r['path'],'document_id':r['document_id'],'characters':len(text.strip()),'empty_pages':r.get('empty_pages',[]),'control_character_fraction':controls/max(1,len(text)),'review_flags':(['no meaningful text'] if len(text.strip())<100 else [])+(['possible font encoding corruption'] if controls/max(1,len(text))>.01 else [])})
-    (out/'extraction-quality.json').write_text(json.dumps(quality,indent=2,ensure_ascii=False)+'\n')
-    md='# Proposed 20-document pilot\n\nThis purposive feasibility selection is not a representative sample or the matched English/French search experiment. Context documents may yield zero eligible deployments. Arabic sources remain preserved in the corpus but outside the original English/French study scope. No labels are assigned.\n\n'
-    for i,r in enumerate(selected,1):md+=f"{i}. **{r['path']}** — {r['role']}. {r['selection_reason']}\n\n"
-    Path('pilot-plan.md').write_text(md.rstrip() + '\n')
+def normalized_path(path):
+    return unicodedata.normalize('NFC', path)
 
-if __name__=='__main__':main()
+
+def build(processed, output, plan_output=Path('pilot-plan.md')):
+    processed, output, plan_output = Path(processed), Path(output), Path(plan_output)
+    rows = read_jsonl(processed / 'inventory.jsonl')
+    pages = read_jsonl(processed / 'pages.jsonl')
+    by_path = {}
+    for row in rows:
+        key = normalized_path(row['path'])
+        if key in by_path:
+            raise ValueError(f'Duplicate Unicode-normalized path: {row["path"]}')
+        by_path[key] = row
+
+    missing = [name for name, _, _ in SELECTION if normalized_path(name) not in by_path]
+    if missing:
+        raise ValueError('Pilot source files missing: ' + ', '.join(missing))
+
+    output.mkdir(parents=True, exist_ok=True)
+    selected = []
+    for name, role, reason in SELECTION:
+        row = by_path[normalized_path(name)]
+        selected.append({
+            'document_id': row['document_id'],
+            'path': row['path'],
+            'role': role,
+            'selection_reason': reason,
+            'eligibility': 'pending human review',
+            'empty_pages': row.get('empty_pages', []),
+        })
+    (output / 'selection.json').write_text(
+        json.dumps(selected, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+
+    pages_by_document = {}
+    for page in pages:
+        pages_by_document.setdefault(page['document_id'], []).append(page['text'])
+    quality = []
+    for row in rows:
+        document_id = row.get('document_id')
+        if not document_id:
+            continue
+        text = ''.join(pages_by_document.get(document_id, []))
+        controls = sum(ord(c) < 32 and c not in '\n\r\t' for c in text)
+        fraction = controls / max(1, len(text))
+        quality.append({
+            'path': row['path'],
+            'document_id': document_id,
+            'characters': len(text.strip()),
+            'empty_pages': row.get('empty_pages', []),
+            'control_character_fraction': fraction,
+            'review_flags': (
+                (['no meaningful text'] if len(text.strip()) < 100 else [])
+                + (['possible font encoding corruption'] if fraction > .01 else [])
+            ),
+        })
+    (output / 'extraction-quality.json').write_text(
+        json.dumps(quality, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+
+    markdown = '# Proposed 20-document pilot\n\nThis purposive feasibility selection is not a representative sample or the matched English/French search experiment. Context documents may yield zero eligible deployments. Arabic sources remain preserved in the corpus but outside the original English/French study scope. No labels are assigned.\n\n'
+    for index, row in enumerate(selected, 1):
+        markdown += f"{index}. **{row['path']}** — {row['role']}. {row['selection_reason']}\n\n"
+    plan_output.write_text(markdown.rstrip() + '\n', encoding='utf-8')
+    return selected, quality
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--processed', type=Path, default=Path('data/processed'))
+    parser.add_argument('--output', type=Path, default=Path('data/pilot'))
+    parser.add_argument('--plan-output', type=Path, default=Path('pilot-plan.md'))
+    args = parser.parse_args()
+    selected, quality = build(args.processed, args.output, args.plan_output)
+    print(json.dumps({
+        'selected_documents': len(selected),
+        'quality_rows': len(quality),
+        'output': str(args.output),
+        'plan_output': str(args.plan_output),
+    }, indent=2))
+
+
+if __name__ == '__main__':
+    main()

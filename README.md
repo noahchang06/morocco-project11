@@ -2,7 +2,7 @@
 
 Evidence-grounded classification of publicly documented AI deployments in Morocco. Compare a fixed bilingual rule baseline and an LLM against independently reviewed labels: **operational**, **pilot**, **announced**, and **insufficiently_supported**.
 
-This is a research scaffold, not a completed benchmark or RAG chatbot. The local TA collection has been ingested, but human annotation and real model evaluation remain pending. Thirteen synthetic tests pass locally. An inactive GitHub Actions template is included in `ci/github-actions-tests.yml`; GitHub CI has not run.
+This is a research scaffold, not a completed benchmark or RAG chatbot. The local TA collection has been ingested, but human annotation and real model evaluation remain pending. Seventeen automated tests pass locally. An inactive GitHub Actions template is included in `ci/github-actions-tests.yml`; GitHub CI has not run.
 
 ## How this can be useful in Morocco
 
@@ -56,7 +56,7 @@ Assignments below are recommendations to confirm as a team, not completed contri
 |---|---|---|---|
 | 1. Consolidate screening | Yuxin; Noah checks eligibility | Merge the six screening logs, resolve source identity and metadata, link repeated/translated coverage, and list missing original sources. | One screening log with decisions for all six documents and a verified candidate list. No forced record count. |
 | 2. Finalize calibration guide | Noah; all discuss | Define eligible AI applications, infrastructure/center exclusions, location granularity, publication window, as-of date, negation and conflicting-status rules. Decide how English-first work affects RQ2. | Versioned guide and a decision log. Undefined rules resolved before final test annotation. |
-| 3. Verify annotation tooling | Xichen; Yuxin tries the workflow | Manually test passage selection, multi-passage records, export/resume and exact offsets against page text. Fix defects; add source URL/sector/ownership fields and record editing if needed. Do not add autosave without deciding storage/privacy behavior. | Successful browser walkthrough and regression tests; this browser verification is currently pending. |
+| 3. Verify annotation tooling | Xichen; Yuxin tries the workflow | Xichen completed a macOS/Chrome walkthrough on 2026-10-17: one Idarati record, two passages, validation, export/resume and byte-identical re-export passed. Source URL/sector/ownership fields and saved-record editing controls were then added with regression coverage. Do not add autosave without deciding storage/privacy behavior. | Xichen's walkthrough and automated tests pass. Yuxin should independently try the revised controls before live annotation. |
 | 4. Create canonical records | Yuxin; Xichen validates | Export selected evidence, normalize organization IDs, link sources to deployment records, and keep context/excluded documents out of the classifier inputs. | Validated `data/curated/records.jsonl`; no quote mismatches, duplicate IDs or unresolved organization aliases. |
 | 5. Independently annotate | Noah and Yuxin; Xichen adjudicates after independent completion | Generate prediction-free packets; label the same calibration evidence separately, calculate agreement, discuss disagreements and preserve original labels. Adjudicate before consulting predictions. | Two reviewer exports, an agreement summary and adjudicated development labels. Revise the guide if calibration exposes ambiguities. |
 | 6. Complete pilot and assess yield | Yuxin leads collection; Noah reviews scope | Expand beyond the first six toward the proposed 20-document feasibility pilot using reviewable languages. Record yield, class counts, organization counts, duplicates and extraction failures; revise the proposed selection transparently if needed. | Pilot feasibility report; decision on further collection and whether the original 100-record target is attainable. |
@@ -90,7 +90,7 @@ Set the input path to your downloaded folder:
 
 ```sh
 python3 -m morocco.ingest /absolute/path/to/Morroco --output data/processed
-python3 -m morocco.pilot
+python3 -m morocco.pilot --processed data/processed --output data/pilot --plan-output pilot-plan.md
 python3 -m morocco.review --output evidence-review.html
 ```
 
@@ -114,6 +114,7 @@ The model integration exports requests and imports validated predictions; it doe
 - [Operating workflow](workflow.md): detailed research steps and commands.
 - [Annotation protocol](protocol.md): draft definitions and record format.
 - [Pilot selection](pilot-plan.md): proposed 20-document feasibility sample.
+- [Pilot feasibility result](pilot-results.md): provisional screening outcomes, extraction blockers and the current yield conclusion.
 - [Corpus status](corpus-status.md): recorded ingestion counts and empty-page review list.
 
 ## Collaboration

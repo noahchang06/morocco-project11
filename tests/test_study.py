@@ -6,6 +6,10 @@ class StudyTests(unittest.TestCase):
         for text in ['The system will deploy next year.', 'Le système sera déployé en 2027.']:
             self.assertEqual(baseline({'record_id': 'a', 'evidence': [{'quote': text}]})['label'], 'announced')
 
+    def test_intended_to_is_announced(self):
+        text = 'The assistant is intended to guide users.'
+        self.assertEqual(baseline({'record_id': 'a', 'evidence': [{'quote': text}]})['label'], 'announced')
+
     def test_negation_and_conflicts_abstain(self):
         for text in ['The system is not in production.', 'It is in production. Another pilot is testing.']:
             self.assertEqual(baseline({'record_id': 'a', 'evidence': [{'quote': text}]})['label'], 'insufficiently_supported')

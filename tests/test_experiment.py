@@ -56,4 +56,18 @@ class ExperimentTests(unittest.TestCase):
             self.assertNotIn('SECRET_LABEL',html)
             self.assertNotIn('</script><script>bad()',html)
 
+    def test_evidence_review_has_metadata_and_edit_controls(self):
+        with tempfile.TemporaryDirectory() as d:
+            p=Path(d)
+            write_jsonl(p/'inventory.jsonl',[dict(path='source.pdf',document_id='doc-1')])
+            write_jsonl(p/'pages.jsonl',[dict(document_id='doc-1',page=1,text='Verified source text.')])
+            build(p,p/'review.html')
+            html=(p/'review.html').read_text()
+            for field in ('sector','partner','organization_origin','ownership','as_of_date','source_url'):
+                self.assertIn("'"+field+"'",html)
+            for control in ('saved-records','new-record','load-record','delete-record','load-evidence','delete-evidence'):
+                self.assertIn('id="'+control+'"',html)
+            self.assertIn('editingId',html)
+            self.assertIn("$('resume').value=''",html)
+
 if __name__=='__main__':unittest.main()
