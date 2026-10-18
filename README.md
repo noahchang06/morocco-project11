@@ -2,7 +2,7 @@
 
 Evidence-grounded classification of publicly documented AI deployments in Morocco. Compare a fixed bilingual rule baseline and an LLM against independently reviewed labels: **operational**, **pilot**, **announced**, and **insufficiently_supported**.
 
-This is a research scaffold, not a completed benchmark or RAG chatbot. The local TA collection has been ingested, but human annotation and real model evaluation remain pending. Fifteen automated tests pass locally. An inactive GitHub Actions template is included in `ci/github-actions-tests.yml`; GitHub CI has not run.
+This is a research scaffold, not a completed benchmark or RAG chatbot. The local TA collection has been ingested, but human annotation and real model evaluation remain pending. Seventeen automated tests pass locally. An inactive GitHub Actions template is included in `ci/github-actions-tests.yml`; GitHub CI has not run.
 
 ## How this can be useful in Morocco
 
@@ -90,7 +90,7 @@ Set the input path to your downloaded folder:
 
 ```sh
 python3 -m morocco.ingest /absolute/path/to/Morroco --output data/processed
-python3 -m morocco.pilot
+python3 -m morocco.pilot --processed data/processed --output data/pilot --plan-output pilot-plan.md
 python3 -m morocco.review --output evidence-review.html
 ```
 

@@ -76,4 +76,4 @@ No deployment labels, model outputs, human agreement results or research accurac
 
 ## Verification status
 
-Fifteen automated tests pass, including a synthetic freeze-to-evaluation integration test, coverage for evidence metadata/edit controls and the development-calibration cue “intended to.” On 2026-10-17, Xichen completed a macOS/Chrome walkthrough with one Idarati record and two evidence passages: validation passed, and export/resume produced a byte-identical re-export. The revised record editing and deletion controls still need an independent teammate walkthrough before live annotation.
+Seventeen automated tests pass, including a synthetic freeze-to-evaluation integration test, coverage for evidence metadata/edit controls, the development-calibration cue “intended to,” configurable pilot paths and Unicode-normalized source matching. On 2026-10-17, Xichen completed a macOS/Chrome walkthrough with one Idarati record and two evidence passages: validation passed, and export/resume produced a byte-identical re-export. The revised record editing and deletion controls still need an independent teammate walkthrough before live annotation.
