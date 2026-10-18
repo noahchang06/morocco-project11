@@ -114,6 +114,7 @@ The model integration exports requests and imports validated predictions; it doe
 - [Operating workflow](workflow.md): detailed research steps and commands.
 - [Annotation protocol](protocol.md): draft definitions and record format.
 - [Pilot selection](pilot-plan.md): proposed 20-document feasibility sample.
+- [Pilot feasibility result](pilot-results.md): provisional screening outcomes, extraction blockers and the current yield conclusion.
 - [Corpus status](corpus-status.md): recorded ingestion counts and empty-page review list.
 
 ## Collaboration
