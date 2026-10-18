@@ -6,11 +6,11 @@ import re
 from pathlib import Path
 
 LABELS = ('operational', 'pilot', 'announced', 'insufficiently_supported')
-RULE_VERSION = 'draft-1'
+RULE_VERSION = 'draft-2'
 CUES = {
     'operational': r'\b(in daily use|in ongoing use|currently uses|currently operates|in production|en production|utilise actuellement|en service)\b',
     'pilot': r'\b(pilot|piloting|trial|testing|pilote|expérimentation|en test)\b',
-    'announced': r'\b(plans to|will deploy|will launch|intends to|planned|prévoit|prévu|prévue|sera déployé|sera déployée|projet de)\b',
+    'announced': r'\b(plans to|will deploy|will launch|intend(?:s|ed)? to|planned|prévoit|prévu|prévue|sera déployé|sera déployée|projet de)\b',
 }
 NEGATION = r"\b(not|never|no longer|pas|jamais|aucun|aucune|sans)\b"
 
