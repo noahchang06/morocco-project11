@@ -69,3 +69,38 @@ Priority follow-ups are:
 4. OCR the two image-only PDFs only if their likely evidentiary value justifies the work.
 
 Until those steps produce additional records, report this as a completed feasibility pilot with insufficient yield for the proposed classification benchmark, not as a completed accuracy experiment.
+
+<!-- four-record-smoke-test:start -->
+## Four-record end-to-end pipeline check — October 18, 2026
+
+The expanded local corpus contains 57 source files, 2,248
+physical pages, and 3,812 extracted chunks. Ingestion reported
+0 file-level errors and 20 documents requiring
+extraction review.
+
+Four evidence-linked calibration records now pass exact page, offset, and quotation
+validation. Their provisional labels are:
+
+- Operational: 1
+- Pilot: 0
+- Announced: 3
+- Insufficiently supported: 0
+
+The added cases cover ONDA's operational facial-recognition system at Casablanca
+Airport and two announced MTNRA/Mistral models. The earlier Idarati case remains
+classified as announced.
+
+A complete freeze, prediction-import, manifest-integrity, quotation-validation, and
+evaluation smoke test succeeded. The deterministic split placed 2 records in
+the test subset. Fixed four-class macro-F1 was 0.00 for the draft rules
+and 0.25 for the pipeline-check predictions.
+
+These values are not research performance estimates. The pipeline-check predictions
+were constructed from the assumed labels solely to validate the software path, the
+test subset contains only the announced class, and the assumed-consensus labels do
+not constitute independently collected reviewer agreement. Cluster bootstrap status:
+`unavailable: fewer than two organization clusters`.
+
+All imported prediction quotations passed exact-substring validation. Semantic
+support and final eligibility remain human-review responsibilities.
+<!-- four-record-smoke-test:end -->
