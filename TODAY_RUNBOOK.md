@@ -1,6 +1,6 @@
 # Xichen：当前交接与下一步
 
-首轮已经完成：5 条记录（1 development、4 test），rules 生成 5 条预测；LLM 的 1 条 development 和 3 条 test 通过验证，另 1 条 test 的异常响应原样保留。API 访问、输入公平性、cutoff 和 splits 已确定，不需要重新安装或配置。
+首轮已经完成：5 条记录（1 development、4 test），rules 生成 5 条预测；LLM 的 1 条 development 和 3 条 test 通过验证，另 1 条 test 的异常响应原样保留。已按相同配置完整复跑一次：再次得到 4 条有效输出和同一条失败，有效分类均一致。两轮分别保存，没有第三次重试。API 访问、输入公平性、cutoff 和 splits 已确定，不需要重新安装或配置。
 
 当前材料：
 
@@ -22,7 +22,7 @@
 2. 若有字段/context 实质修正，保留旧版本，说明修正原因，并决定新的冻结/运行；不要在旧输入上改字后复用原预测。
 3. 对未讨论的原始独立标签计算 agreement；需要修正或空标签时停止，不能把它们当成第五个部署阶段。
 4. 保存独立仲裁后的 gold，与模型输出隔离。确认输入未变后，建立新的、带人工核验记录的 study 快照，逐项比对旧冻结 inputs/splits/rules/prompt。当前 `prediction_pending_human_review` 目录不能评分。
-5. 明确报告模型的 1 条失败。不能把 3 条成功模型结果与 4 条 rules 结果直接比较，也不能默默丢掉失败记录。若授权完整技术复跑，单独报告两轮，不能拼接“每条第一次成功”的结果。
+5. 主分析使用首轮的 4 条 test 尝试：3 条 accepted 加 1 条 failures。失败计入其 gold 类的 false negative，保留四类 macro-F1；矩阵额外一列 invalid_output 仅审计，不是第五种阶段。报告 3/4 输出覆盖率。完整复跑作为独立可靠性检查，不拼接两轮结果。
 6. 只有以上条件满足后，输出 macro-F1、per-class scores、confusion matrices 和 false-operational rate。四条 test 只支持描述性结果，不支持泛化优势或语言比较。
 
 Agreement 命令（只在两份完整且独立的标签就绪后）：
@@ -34,11 +34,22 @@ python3 -m morocco.experiment agreement data/noah.jsonl data/yuxin.jsonl \
 
 False-operational rate 保留原定义：错误 operational 预测数 / 全部 operational 预测数。分母 0 时为 null。Macro-F1 固定四类，缺失类贡献 0，并同时报告 support。kappa 在预期一致率为 1 时未定义。
 
+评分命令（仅在人工核验后的 study 快照和 gold 就绪后，以下为待满足条件，不会自动执行）：
+
+```bash
+python3 -m morocco.experiment evaluate data/human-reviewed-frozen \
+  --predictions data/execution-20261108-v1/llm-test/accepted_predictions.jsonl \
+  --failures data/execution-20261108-v1/llm-test/failures.jsonl \
+  --gold data/gold-test.jsonl --output data/final-results
+```
+
+`--failures` 要求成功与失败 IDs 不重叠且完整覆盖所选 split；缺失、重复、额外 ID 会报错。当前 pending-human-review 冻结版本即使传此参数也禁止评分。
+
 ## 故障与复现
 
 `morocco.run_model` 保存每条原始响应并严格验证。`morocco.complete_batch` 可在同一冻结配置下继续尚未请求的记录，已有失败或成功响应都不会被再次请求；它分别写 accepted_predictions.jsonl、failures.jsonl 和 batch_metadata.json。只有全批通过才生成完整 predictions.jsonl。
 
-本次首轮 test 完成器已请求完所有四条，重复运行只会复用缓存。额外整批复跑被自动审批拦截；没有保存额外预测，不能声称复跑成功，也不能在未获得明确授权时继续发送证据。
+本次首轮 test 完成器已请求完所有四条，重复运行只会复用缓存。此前审批阻塞后，用户授权继续。完整复跑现已完成，同一条失败重现，另四条有效输出的分类一致。两轮的输入和请求 hashes 一致；没有第三次重试。
 
 验证代码：
 
