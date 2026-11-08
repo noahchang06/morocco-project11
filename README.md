@@ -1,8 +1,8 @@
 # Morocco Diplomacy Lab — Project 11
 
-Evidence-grounded classification of publicly documented AI deployments in Morocco. Compare a fixed bilingual rule baseline and an LLM against independently reviewed labels: **operational**, **pilot**, **announced**, and **insufficiently_supported**.
+**Current November 8 execution:** [progress](PROGRESS_2026-11-08.md), [handoff](TODAY_RUNBOOK.md), [source protocol](docs/EXECUTION_PROTOCOL_2026-11-08.md), and [appendix](APPENDIX_METHOD.md). Five assistant-screened records were frozen (one development, four held out), with identical information for rules and LLM. Five rule predictions and five primary API responses are saved: four model responses passed validation, one test response failed and is preserved. One authorized complete-cohort replication also yielded four valid outputs and the same test failure; accepted labels matched. Failed outputs remain in eventual full-cohort evaluation. Independent human verification/labels and research scores are pending. All 35 offline tests pass. No per-record predictions or credentials are published here.
 
-This is a research scaffold, not a completed benchmark or RAG chatbot. The local TA collection has been ingested, but human annotation and real model evaluation remain pending. Seventeen automated tests pass locally. An inactive GitHub Actions template is included in `ci/github-actions-tests.yml`; GitHub CI has not run.
+Evidence-grounded classification of publicly documented AI applications in Morocco: **operational**, **pilot**, **announced**, and **insufficiently_supported**. This bounded convenience sample is not a completed benchmark or national deployment census. The sections below retain historical project planning; older extraction counts, test counts and pending-access statements are superseded by the linked execution checkpoint. The inactive GitHub Actions template has not run.
 
 ## How this can be useful in Morocco
 
@@ -126,3 +126,8 @@ No open-source license has been assigned; the team should decide licensing befor
 ## Enable GitHub CI
 
 The current GitHub OAuth login lacks the `workflow` scope, so the test workflow is stored as an inactive template. With suitable GitHub permissions, move `ci/github-actions-tests.yml` to `.github/workflows/tests.yml` and commit it to run tests on pushes and pull requests. Local tests do not require GitHub Actions.
+
+
+### Offline completion after human review
+
+The current primary prediction run and its one full technical replication are complete. There is no further API setup step. Use [docs/LABEL_HANDOFF.md](docs/LABEL_HANDOFF.md) for the two-command validation/adjudication/finalization workflow; it consumes genuine independent human exports and existing raw responses. Sections 4.3/4.4 and the exact frozen prompt are in [docs/RESULTS_SECTIONS_DRAFT.md](docs/RESULTS_SECTIONS_DRAFT.md). Human-dependent scores remain pending. Separate OCR and exploratory candidate discovery do not alter the four-record primary test cohort. Current validation: 40 offline tests pass.

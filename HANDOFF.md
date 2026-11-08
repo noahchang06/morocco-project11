@@ -1,3 +1,5 @@
+> Current execution handoff: see [PROGRESS_2026-11-08.md](PROGRESS_2026-11-08.md), [TODAY_RUNBOOK.md](TODAY_RUNBOOK.md), and [bounded source protocol](docs/EXECUTION_PROTOCOL_2026-11-08.md). The sections below are historical project planning and corpus snapshots; their older counts and pending-access statements do not describe the current run. Independent human labels are still pending.
+
 # Morocco Diplomacy Lab Project 11 — team handoff
 
 **Status verified: October 17, 2026. Team: Noah, Yuxin, Xichen.**
