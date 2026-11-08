@@ -1,5 +1,11 @@
 # Morocco Diplomacy Lab — Project 11
 
+**November 8 implementation update:** [Same-day runbook](TODAY_RUNBOOK.md) and
+[appendix draft](APPENDIX_METHOD.md) document shared-context inputs, a resumable
+Responses API runner, and existing agreement/evaluation tools. Historical status
+notes below predate this change. Real data, human labels and API access are still
+required; passing synthetic tests does not establish research results.
+
 Evidence-grounded classification of publicly documented AI deployments in Morocco. Compare a fixed bilingual rule baseline and an LLM against independently reviewed labels: **operational**, **pilot**, **announced**, and **insufficiently_supported**.
 
 This is a research scaffold, not a completed benchmark or RAG chatbot. The local TA collection has been ingested, but human annotation and real model evaluation remain pending. Seventeen automated tests pass locally. An inactive GitHub Actions template is included in `ci/github-actions-tests.yml`; GitHub CI has not run.

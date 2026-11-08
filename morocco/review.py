@@ -3,15 +3,17 @@ import argparse
 import json
 from pathlib import Path
 from .study import read_jsonl, validate
+from .evidence import prepare
 
 
-def build(processed, output, records=None):
+def build(processed, output, records=None, as_of_date=None, outdated_years=2):
     pages=read_jsonl(Path(processed)/'pages.jsonl')
     if records is not None:
-        validate(records,pages)
-        data=[{k:r[k] for k in ('record_id','organization','use_case','moroccan_location','evidence') if k in r} for r in records]
-        for r in data:
-            r['evidence']=[{k:e.get(k) for k in ('quote','document_id','page','source_date','language')} for e in r['evidence']]
+        dates={r.get('as_of_date') for r in records if r.get('as_of_date')}
+        if len(dates)>1:
+            raise ValueError('Reviewer records contain inconsistent evidence cutoffs')
+        cutoff=as_of_date or next(iter(dates),None)
+        data=prepare(records,pages,cutoff,outdated_years)
         mode='labels'
     else:
         rows=read_jsonl(Path(processed)/'inventory.jsonl')
@@ -57,4 +59,6 @@ $('resume').onchange=async()=>{try{const rows=(await $('resume').files[0].text()
 </script></html>'''
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--processed',default='data/processed');p.add_argument('--records');p.add_argument('--output',required=True);a=p.parse_args();build(a.processed,a.output,read_jsonl(a.records) if a.records else None)
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('--processed',default='data/processed');p.add_argument('--records');p.add_argument('--output',required=True)
+    p.add_argument('--as-of-date');p.add_argument('--outdated-years',type=int,default=2)
+    a=p.parse_args();build(a.processed,a.output,read_jsonl(a.records) if a.records else None,a.as_of_date,a.outdated_years)
