@@ -39,8 +39,17 @@ def freeze(records, pages, output, model, as_of_date, seed='morocco-pilot-1',
     date.fromisoformat(as_of_date)
     if not records or not model.strip():
         raise ValueError('Reviewed records and an explicit model identifier are required')
-    if purpose not in ('study', 'development_smoke_test'):
+    if purpose not in ('study', 'development_smoke_test', 'prediction_pending_human_review'):
         raise ValueError('Unknown run purpose')
+    if purpose == 'prediction_pending_human_review':
+        invalid_ids = [r.get('record_id', '<missing>') for r in records
+                       if r.get('record_status') != 'eligible_assistant_screened'
+                       or r.get('eligibility_decision') != 'include'
+                       or not isinstance(r.get('eligibility_rationale'), str)
+                       or not r['eligibility_rationale'].strip()]
+        if invalid_ids:
+            raise ValueError('Pending-review predictions require an explicit assistant eligibility decision: '
+                             + ', '.join(invalid_ids))
     pending_ids = [r['record_id'] for r in records
                    if r.get('human_inclusion_confirmed') is False
                    or str(r.get('record_status', '')).startswith('candidate_pending')]
@@ -72,13 +81,20 @@ def freeze(records, pages, output, model, as_of_date, seed='morocco-pilot-1',
                                 'This is a provisional software-only calibration run. Eligibility may be unresolved; your output does not establish eligibility.')
     config = {'model': model, 'as_of_date': as_of_date, 'split_seed': seed, 'prompt': prompt,
               'purpose': purpose, 'unconfirmed_candidate_ids': pending_ids,
-              'guide_version': '2026-11-08-draft-v1', 'outdated_years': outdated_years,
+              'guide_version': '2026-11-08-execution-v1', 'outdated_years': outdated_years,
               'calibration_ids': sorted(calibration_ids),
               'model_settings': model_settings or {'max_output_tokens': 1500},
               'input_policy': 'identical label-free packets; verified context offsets or full preserved page',
               'model_execution': 'morocco.run_model or validated external import',
               'rule_source_sha256': hashlib.sha256(Path(__file__).with_name('study.py').read_bytes()).hexdigest(),
               'evidence_source_sha256': hashlib.sha256(Path(__file__).with_name('evidence.py').read_bytes()).hexdigest()}
+    if purpose == 'prediction_pending_human_review':
+        # Audit screening separately; neither classifier receives these decisions.
+        config['pending_human_review_ids'] = [r['record_id'] for r in records
+                                               if r.get('human_inclusion_confirmed') is not True]
+        config['screening_audit'] = [{k: r.get(k) for k in (
+            'record_id', 'record_status', 'eligibility_decision',
+            'eligibility_rationale', 'human_inclusion_confirmed')} for r in records]
     output = Path(output)
     output.mkdir(parents=True, exist_ok=False)
     write_jsonl(output / 'inputs.jsonl', clean)
@@ -157,6 +173,8 @@ def evaluate(directory, predictions_path, gold_path, output, subset='test', iter
     config = json.loads((directory / 'config.json').read_text())
     if config.get('purpose') == 'development_smoke_test':
         raise ValueError('Provisional software-only runs cannot produce research evaluation metrics')
+    if config.get('purpose') == 'prediction_pending_human_review':
+        raise ValueError('Runs pending human field review cannot produce research evaluation metrics')
     records = read_jsonl(directory / 'inputs.jsonl')
     assignments = json.loads((directory / 'splits.json').read_text())
     selected = [r for r in records if assignments[r['record_id']] == subset]
@@ -213,7 +231,8 @@ def main():
     f.add_argument('--calibration-ids', help='JSON array of previously discussed record IDs')
     f.add_argument('--outdated-years', type=int, default=2)
     f.add_argument('--model-settings', help='JSON object of explicit API generation settings')
-    f.add_argument('--purpose', choices=['study', 'development_smoke_test'], default='study')
+    f.add_argument('--purpose', choices=['study', 'development_smoke_test',
+                                       'prediction_pending_human_review'], default='study')
     e = sub.add_parser('evaluate')
     e.add_argument('experiment'); e.add_argument('--predictions', required=True); e.add_argument('--gold', required=True)
     e.add_argument('--output', required=True); e.add_argument('--split', choices=['development', 'test'], default='test')

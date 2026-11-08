@@ -1,6 +1,6 @@
 # Classification implementation and appendix draft
 
-Status: 25 offline tests pass. Actual API access and one accepted development prediction have been verified on a provisional Idarati candidate. There is no held-out evaluation, human agreement estimate, or research performance result. Fill study-specific values from the final frozen artifacts once approved records and reference labels are available.
+Status: the bounded five-record cohort and shared-input prediction run are described in PROGRESS_2026-11-08.md and docs/EXECUTION_PROTOCOL_2026-11-08.md. There is no human agreement estimate or research performance result. All records remain pending independent human field verification. The exact prompt, settings and outputs are preserved with the experiment artifacts; current software checks are reported in the progress file.
 
 ## Information parity
 
@@ -14,9 +14,9 @@ The bilingual baseline recognizes stage cues, redirects prospective trials to an
 
 The prompt encodes the four stages and the outdated, conflicting, ambiguous and unverified reason codes in the November 8 draft guide. Planned pilots and product releases without evidence of use are announced. Missing dates remain unknown. Prior calibration organizations are excluded from test when the calibration-ID manifest is supplied. A provided split manifest is checked for exact record coverage and organization separation. Known publication dates after the cutoff are rejected.
 
-Team decisions required before the real freeze: evidence cutoff; the two-year threshold; eligibility of model-release records and digital systems without documented AI; source verification and qualified French review. The revised proposal already specifies gpt-4.1-mini-2025-04-14 with temperature 0; config/proposal-model-settings.json preserves that temperature and adds this implementation's 1500-token output cap. Account access and a real development call are verified. A 2023 operational example needs reconciliation with a late-2026 cutoff under a two-year rule.
+The user delegated scope choices. The execution uses a 2026-11-08 evidence cutoff, a two-year evidence-age threshold, one development organization and four new test organizations. Generic model releases, infrastructure and digital systems without an explicit AI/recognition application were excluded. The revised proposal specifies gpt-4.1-mini-2025-04-14 and temperature 0; the implementation uses a 1500-token output cap. Missing exact source dates remain null. The Crédit du Maroc context includes a March 2025 management-report header; this is not a verified online publication date. All four test sources are French, and no bilingual-performance inference is possible.
 
-Explicitly unconfirmed candidates are rejected from study freezes. A separately marked development_smoke_test snapshot allows provisional data only in development and cannot be scored as a research evaluation. PDF line wraps are normalized for cue matching without changing the original quoted substring, so a newline between a negation and its stage cue does not discard the negation.
+Explicitly unconfirmed candidates are rejected from study freezes. A separately marked development_smoke_test snapshot allows provisional data only in development and cannot be scored as a research evaluation. The new prediction_pending_human_review purpose permits prospective development/test predictions only for explicit assistant-screened eligible records. It preserves screening decisions outside the shared inputs and blocks research scoring until human field review is resolved. PDF line wraps are normalized for cue matching without changing the original quoted substring, so a newline between a negation and its stage cue does not discard the negation.
 
 The exact prompt is `PROMPT` in `morocco/experiment.py`, copied verbatim into frozen `config.json` and `model_requests.jsonl`. Include that frozen prompt in the submitted appendix rather than a paraphrase or later source-code version. The model, explicit settings, guide version, cutoff, rule/evidence source hashes and artifact manifest are stored with the run. Unspecified generation parameters use provider defaults and must not be described as fixed zero-temperature settings.
 
@@ -42,7 +42,7 @@ Development labels may inform guide/prompt/rule revisions. Freeze final versions
 
 The standard-library adapter uses the [OpenAI Responses API structured-output interface](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses). Explicitly choose and verify the model through a development call. No model substitution or outside retrieval is performed. A strict JSON schema requests record ID, label, supporting quote, evidence index, insufficiency reason code and a brief rationale. Exact quotations are checked against the shared context.
 
-Raw responses, actual model identifiers, usage information when returned, request hashes and timestamps are retained. Transient transport/server failures have bounded retries; refusals, truncation or invalid outputs stop the run and remain visible. Resume reuses existing responses and checks the frozen identity. Report failures and interventions; do not silently discard items or resample until an answer looks desirable. A timeout can still have incurred a provider-side call even if no response was received.
+Raw responses, actual model identifiers, usage information when returned, request hashes and timestamps are retained. The complete_batch wrapper can finish only unattempted records after a validation failure while preserving the failed raw response. It exports accepted predictions and failures separately; a response failure is not a deployment-stage label. Transient transport/server failures have bounded retries; refusals, truncation or invalid outputs stop the run and remain visible. Resume reuses existing responses and checks the frozen identity. Report failures and interventions; do not silently discard items or resample until an answer looks desirable. A timeout can still have incurred a provider-side call even if no response was received.
 
 ## Actual development intervention
 
@@ -54,8 +54,12 @@ The next response predicted announced and quoted the Idarati sentence exactly.
 Both raw responses are retained. This is a development-format intervention,
 not a silent retry, first-attempt success, or evidence of predictive accuracy.
 The rule quotation refers to an adjacent marketplace; this attribution
-limitation remains documented. The revised prompt is the current development
-candidate, not yet a finalized held-out study protocol.
+limitation remains documented. That revised prompt was frozen unchanged for the bounded held-out execution.
+The historical development outputs remain separate from this cohort.
+
+## Execution failures and replication
+
+The primary held-out batch had one response that degenerated into repeated null Unicode escapes and reached the output cap. The other three held-out responses and the development response passed validation. The failure remains in the primary batch. Before any additional calls, one complete-cohort technical replication was declared: the same five records, frozen inputs, model, prompt and settings, with one new response per record and no third attempt for validation failures. Primary and replication outputs remain separate; first successful outputs are never pooled. This post-failure replication is a disclosed reliability diagnostic, not a prespecified accuracy experiment. Automatic approval review blocked the additional transmission. No extra response or completed prediction was saved, and provider-side processing of the interrupted request is unverified. The replication is not a completed result and cannot proceed without fresh explicit authorization. Primary acceptance counts are in the execution summary. No prediction is human gold.
 
 ## Evaluation reporting
 

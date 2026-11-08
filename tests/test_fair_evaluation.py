@@ -127,6 +127,64 @@ class FairEvaluationTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 run(p/'frozen', p/'api', 'development', transport=transport)
 
+    def test_assistant_screened_predictions_allow_both_splits_but_not_research_scores(self):
+        records, pages = self.fixture()
+        records[0].update(record_status='eligible_assistant_screened',
+                          eligibility_decision='include',
+                          eligibility_rationale='SCREENING_ONLY: named organization, task and site.',
+                          human_inclusion_confirmed=False)
+        records.append({**records[0], 'record_id': 'r2', 'organization_id': 'org2'})
+        with tempfile.TemporaryDirectory() as temp:
+            p = Path(temp)
+            counts = freeze(records, pages, p/'frozen', 'fixture-model', '2026-11-08',
+                            split_map={'r1': 'development', 'r2': 'test'},
+                            purpose='prediction_pending_human_review')
+            self.assertEqual(dict(counts), {'development': 1, 'test': 1})
+            config = json.loads((p/'frozen'/'config.json').read_text())
+            self.assertEqual(config['guide_version'], '2026-11-08-execution-v1')
+            self.assertEqual(config['pending_human_review_ids'], ['r1', 'r2'])
+            self.assertEqual(config['unconfirmed_candidate_ids'], ['r1', 'r2'])
+            self.assertTrue(all(r['human_inclusion_confirmed'] is False
+                                for r in config['screening_audit']))
+            self.assertTrue(all(r['human_inclusion_confirmed'] is False for r in records))
+            for name in ('inputs.jsonl', 'model_requests.jsonl'):
+                packet = (p/'frozen'/name).read_text()
+                for excluded in ('SCREENING_ONLY', 'eligibility_decision',
+                                 'human_inclusion_confirmed', 'record_status'):
+                    self.assertNotIn(excluded, packet)
+            self.assertIn('Eligibility has already been screened.', config['prompt'])
+            run(p/'frozen', p/'api', 'test', transport=self.fake_transport)
+            write_jsonl(p/'gold.jsonl', [{'record_id': 'r2', 'label': 'operational'}])
+            with self.assertRaisesRegex(ValueError, 'pending human field review'):
+                evaluate(p/'frozen', p/'api'/'predictions.jsonl', p/'gold.jsonl', p/'scores')
+            self.assertFalse((p/'scores').exists())
+            # An explicit false human confirmation still blocks a normal study freeze.
+            with self.assertRaisesRegex(ValueError, 'Unconfirmed candidate'):
+                freeze(records, pages, p/'study', 'fixture-model', '2026-11-08')
+
+    def test_pending_review_predictions_reject_unresolved_or_malformed_screening(self):
+        records, pages = self.fixture()
+        records[0].update(record_status='eligible_assistant_screened',
+                          eligibility_decision='include', eligibility_rationale='Identified fields.',
+                          human_inclusion_confirmed=False)
+        changes = [
+            {'record_status': 'candidate_pending_canonicalization'},
+            {'record_status': 'unresolved'},
+            {'eligibility_decision': 'pending'},
+            {'eligibility_decision': None},
+            {'eligibility_rationale': ''},
+            {'eligibility_rationale': '  \n'},
+            {'eligibility_rationale': None},
+            {'eligibility_rationale': True},
+        ]
+        with tempfile.TemporaryDirectory() as temp:
+            p = Path(temp)
+            for i, changed in enumerate(changes):
+                with self.subTest(changed=changed), self.assertRaisesRegex(ValueError, 'explicit assistant eligibility'):
+                    freeze([{**records[0], **changed}], pages, p/str(i), 'fixture-model', '2026-11-08',
+                           purpose='prediction_pending_human_review')
+                self.assertFalse((p/str(i)).exists())
+
     def test_invalid_response_is_retained_not_silently_resampled(self):
         records, pages = self.fixture()
         with tempfile.TemporaryDirectory() as temp:
