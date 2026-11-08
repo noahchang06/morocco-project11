@@ -54,6 +54,14 @@ class FairEvaluationTests(unittest.TestCase):
                      'Une expérimentation est prévue en 2027.']:
             self.assertEqual(baseline({'record_id': 'a', 'evidence': [{'quote': text}]})['label'], 'announced')
 
+    def test_pdf_wraps_preserve_negation_and_exact_quotation(self):
+        for text in ['The system is not\nin production.', 'Le système ne fonctionne pas\nen service.']:
+            self.assertEqual(baseline({'record_id': 'a', 'evidence': [{'quote': text}]})['label'], 'insufficiently_supported')
+        text = 'The assistant is intended\nto guide users.'
+        result = baseline({'record_id': 'a', 'evidence': [{'quote': text}]})
+        self.assertEqual(result['label'], 'announced')
+        self.assertEqual(result['quote'], text)
+
     def test_calibration_and_organization_split_guards(self):
         records, pages = self.fixture()
         with tempfile.TemporaryDirectory() as temp:
@@ -74,6 +82,25 @@ class FairEvaluationTests(unittest.TestCase):
         return {'status': 'completed', 'model': body['model'], 'id': 'fixture-response',
                 'output': [{'type': 'message', 'content': [
                     {'type': 'output_text', 'text': json.dumps(pred)}]}]}
+
+    def test_pending_candidates_are_development_only_and_cannot_be_scored(self):
+        records, pages = self.fixture()
+        records[0]['human_inclusion_confirmed'] = False
+        with tempfile.TemporaryDirectory() as temp:
+            p = Path(temp)
+            with self.assertRaisesRegex(ValueError, 'Unconfirmed candidate'):
+                freeze(records, pages, p/'study', 'fixture-model', '2026-11-08')
+            with self.assertRaisesRegex(ValueError, 'cannot contain held-out'):
+                freeze(records, pages, p/'bad', 'fixture-model', '2026-11-08',
+                       split_map={'r1': 'test'}, purpose='development_smoke_test')
+            freeze(records, pages, p/'smoke', 'fixture-model', '2026-11-08',
+                   split_map={'r1': 'development'}, purpose='development_smoke_test',
+                   model_settings={'temperature': 0, 'max_output_tokens': 1500})
+            config = json.loads((p/'smoke'/'config.json').read_text())
+            self.assertEqual(config['model_settings']['temperature'], 0)
+            self.assertNotIn('Eligibility has already been screened.', config['prompt'])
+            with self.assertRaisesRegex(ValueError, 'cannot produce research'):
+                evaluate(p/'smoke', p/'unused-predictions', p/'unused-gold', p/'scores', subset='development')
 
     def test_runner_resume_subset_evaluation_and_config_guard(self):
         records, pages = self.fixture()

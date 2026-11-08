@@ -12,7 +12,7 @@
 4. `data/gold-test.jsonl`：第三人仲裁后的 test 标签，不能由 LLM 代填。
 5. `data/splits.json`：`{"record-id":"development", "another-id":"test"}`；正式测试须非空且按 organization 隔离。
 6. `data/calibration-ids.json`：已讨论案例的 record_id JSON 数组；同一 organization 的所有记录都必须留在 development。
-7. 团队确认的 cutoff 日期、outdated 年数和可调用的固定模型 snapshot。当前代码按新指南暂用 2 年，不代表团队已批准。
+7. 团队确认的 cutoff 日期与 outdated 年数。修订 proposal 已指定 `gpt-4.1-mini-2025-04-14`、temperature 0；模型是否可由实际账号调用仍需验证。当前代码按新指南暂用 2 年，不代表团队已批准。
 
 每份人工标签最少包含 `record_id` 和 `label`，建议保留 reviewer_id、guide version、rationale、reason_code 和 notes。
 Agreement 要求两人标签 ID 完全相同；gold-test 的 ID 必须与 test split 完全相同。
@@ -29,17 +29,19 @@ python3 -m unittest discover -s tests -v
 先用 development records 验证模型访问和输出，再冻结正式试验。以下变量必须改成团队确认的实际值，不能原样执行占位符：
 
 ```bash
-export MOROCCO_MODEL='TEAM_CONFIRMED_FIXED_MODEL_SNAPSHOT'
+export MOROCCO_MODEL='gpt-4.1-mini-2025-04-14'
 export MOROCCO_CUTOFF='YYYY-MM-DD'
 python3 -m morocco.experiment freeze data/curated/records.jsonl \
   --pages data/processed/pages.jsonl \
   --output data/final-frozen \
   --model "$MOROCCO_MODEL" --as-of-date "$MOROCCO_CUTOFF" \
   --splits data/splits.json --calibration-ids data/calibration-ids.json \
-  --outdated-years 2
+  --outdated-years 2 --model-settings config/proposal-model-settings.json
 ```
 
-`freeze` 不接受已存在的输出目录。已有冻结目录不可直接改文件；协议、prompt 或参数变更要另建版本并说明原因。开发试跑与正式试验用不同目录。若需要 temperature 等参数，通过 `--model-settings settings.json` 在冻结前显式指定；默认只设置 max_output_tokens=1500，其余使用提供方默认值，不声称完全确定性。
+`freeze` 不接受已存在的输出目录。已有冻结目录不可直接改文件；协议、prompt 或参数变更要另建版本并说明原因。开发试跑与正式试验用不同目录。上面的 settings 文件显式设 temperature=0 和 max_output_tokens=1500；前者来自修订 proposal，后者是本实现的输出上限。temperature 0 不保证完全确定性。若省略 settings 文件，通用 CLI 不会自动套用 proposal 的 temperature。
+
+已明确标注为未确认纳入的候选不能进行 study freeze。诊断性开发运行需显式使用 `--purpose development_smoke_test`，全部记录只能属于 development，且禁止生成研究评估指标。
 
 公平性改动：两套方法共享同一份 `inputs.jsonl`。每条 evidence 包括原 quote、核对后的 context、来源日期、类型、URL、语言等 metadata。传入的 context 文本不会被信任，context 从 preserved page 重新切片。
 

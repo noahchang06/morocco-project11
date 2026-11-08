@@ -33,11 +33,19 @@ def unique(rows):
 
 
 def freeze(records, pages, output, model, as_of_date, seed='morocco-pilot-1',
-           split_map=None, calibration_ids=(), outdated_years=2, model_settings=None):
+           split_map=None, calibration_ids=(), outdated_years=2, model_settings=None,
+           purpose='study'):
     from datetime import date
     date.fromisoformat(as_of_date)
     if not records or not model.strip():
         raise ValueError('Reviewed records and an explicit model identifier are required')
+    if purpose not in ('study', 'development_smoke_test'):
+        raise ValueError('Unknown run purpose')
+    pending_ids = [r['record_id'] for r in records
+                   if r.get('human_inclusion_confirmed') is False
+                   or str(r.get('record_status', '')).startswith('candidate_pending')]
+    if pending_ids and purpose == 'study':
+        raise ValueError('Unconfirmed candidate records cannot enter a study freeze: ' + ', '.join(pending_ids))
     clean = prepare(records, pages, as_of_date, outdated_years)
     assignments = dict(split_map) if split_map is not None else split(clean, seed)
     ids = {r['record_id'] for r in clean}
@@ -56,7 +64,14 @@ def freeze(records, pages, output, model, as_of_date, seed='morocco-pilot-1',
         org_splits[r['organization_id']].add(assignments[r['record_id']])
     if any(len(v) != 1 for v in org_splits.values()):
         raise ValueError('Organizations cannot cross development/test splits')
-    config = {'model': model, 'as_of_date': as_of_date, 'split_seed': seed, 'prompt': PROMPT,
+    if purpose == 'development_smoke_test' and set(assignments.values()) != {'development'}:
+        raise ValueError('A development smoke test cannot contain held-out test records')
+    prompt = PROMPT
+    if purpose == 'development_smoke_test':
+        prompt = prompt.replace('Eligibility has already been screened.',
+                                'This is a provisional software-only calibration run. Eligibility may be unresolved; your output does not establish eligibility.')
+    config = {'model': model, 'as_of_date': as_of_date, 'split_seed': seed, 'prompt': prompt,
+              'purpose': purpose, 'unconfirmed_candidate_ids': pending_ids,
               'guide_version': '2026-11-08-draft-v1', 'outdated_years': outdated_years,
               'calibration_ids': sorted(calibration_ids),
               'model_settings': model_settings or {'max_output_tokens': 1500},
@@ -70,7 +85,7 @@ def freeze(records, pages, output, model, as_of_date, seed='morocco-pilot-1',
     write_json(output / 'splits.json', assignments)
     write_json(output / 'config.json', config)
     write_jsonl(output / 'rule_predictions.jsonl', [baseline(r) for r in clean])
-    write_jsonl(output / 'model_requests.jsonl', [{'record_id': r['record_id'], 'model': model, 'instructions': PROMPT, 'input': r} for r in clean])
+    write_jsonl(output / 'model_requests.jsonl', [{'record_id': r['record_id'], 'model': model, 'instructions': prompt, 'input': r} for r in clean])
     write_json(output / 'manifest.json', {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(output.iterdir())})
     return Counter(assignments.values())
 
@@ -139,6 +154,9 @@ def bootstrap(records, gold, methods, iterations=2000, seed=42):
 def evaluate(directory, predictions_path, gold_path, output, subset='test', iterations=2000):
     directory = Path(directory)
     verify(directory)
+    config = json.loads((directory / 'config.json').read_text())
+    if config.get('purpose') == 'development_smoke_test':
+        raise ValueError('Provisional software-only runs cannot produce research evaluation metrics')
     records = read_jsonl(directory / 'inputs.jsonl')
     assignments = json.loads((directory / 'splits.json').read_text())
     selected = [r for r in records if assignments[r['record_id']] == subset]
@@ -195,6 +213,7 @@ def main():
     f.add_argument('--calibration-ids', help='JSON array of previously discussed record IDs')
     f.add_argument('--outdated-years', type=int, default=2)
     f.add_argument('--model-settings', help='JSON object of explicit API generation settings')
+    f.add_argument('--purpose', choices=['study', 'development_smoke_test'], default='study')
     e = sub.add_parser('evaluate')
     e.add_argument('experiment'); e.add_argument('--predictions', required=True); e.add_argument('--gold', required=True)
     e.add_argument('--output', required=True); e.add_argument('--split', choices=['development', 'test'], default='test')
@@ -206,7 +225,8 @@ def main():
                         split_map=json.loads(Path(args.splits).read_text()) if args.splits else None,
                         calibration_ids=json.loads(Path(args.calibration_ids).read_text()) if args.calibration_ids else (),
                         outdated_years=args.outdated_years,
-                        model_settings=json.loads(Path(args.model_settings).read_text()) if args.model_settings else None)
+                        model_settings=json.loads(Path(args.model_settings).read_text()) if args.model_settings else None,
+                        purpose=args.purpose)
     elif args.command == 'evaluate':
         result = evaluate(args.experiment, args.predictions, args.gold, args.output, args.split)
     else:

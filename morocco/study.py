@@ -7,7 +7,7 @@ from datetime import date
 from pathlib import Path
 
 LABELS = ('operational', 'pilot', 'announced', 'insufficiently_supported')
-RULE_VERSION = 'draft-3-shared-context'
+RULE_VERSION = 'draft-4-shared-context-wraps'
 CUES = {
     'operational': r'\b(in daily use|in ongoing use|currently uses|currently operates|in production|en production|utilise actuellement|en service)\b',
     'pilot': r'\b(pilot|piloting|trial|testing|pilote|expérimentation|en test)\b',
@@ -64,12 +64,15 @@ def baseline(record):
                     'quote': '', 'evidence_index': None, 'reason_code': 'outdated',
                     'rule_version': RULE_VERSION, 'reason': 'all supplied sources predate the frozen recency threshold'}
     for index, item in enumerate(evidence):
-        for sentence in re.split(r'(?<=[.!?])\s+|\n+', item.get('context', item['quote'])):
-            found = [label for label, pattern in CUES.items() if re.search(pattern, sentence, re.I)]
-            if found and re.search(NEGATION, sentence, re.I):
+        for sentence in re.split(r'(?<=[.!?])\s+', item.get('context', item['quote'])):
+            # PDF line wraps are not sentence boundaries. Match normalized spaces
+            # while retaining the exact source substring for the returned quote.
+            match_text = re.sub(r'\s+', ' ', sentence)
+            found = [label for label, pattern in CUES.items() if re.search(pattern, match_text, re.I)]
+            if found and re.search(NEGATION, match_text, re.I):
                 negated = True
                 continue
-            if found and re.search(FUTURE, sentence, re.I):
+            if found and re.search(FUTURE, match_text, re.I):
                 found = ['announced']
             matches.extend((label, sentence, index) for label in found)
     labels = {label for label, _, _ in matches}
