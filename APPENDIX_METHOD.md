@@ -1,6 +1,6 @@
 # Classification implementation and appendix draft
 
-Status: implementation prepared and tested with synthetic fixtures. No empirical model-access check, human agreement estimate, or research performance result has been produced by this change. Fill study-specific values from frozen artifacts after the actual run.
+Status: 25 offline tests pass. Actual API access and one accepted development prediction have been verified on a provisional Idarati candidate. There is no held-out evaluation, human agreement estimate, or research performance result. Fill study-specific values from the final frozen artifacts once approved records and reference labels are available.
 
 ## Information parity
 
@@ -14,7 +14,7 @@ The bilingual baseline recognizes stage cues, redirects prospective trials to an
 
 The prompt encodes the four stages and the outdated, conflicting, ambiguous and unverified reason codes in the November 8 draft guide. Planned pilots and product releases without evidence of use are announced. Missing dates remain unknown. Prior calibration organizations are excluded from test when the calibration-ID manifest is supplied. A provided split manifest is checked for exact record coverage and organization separation. Known publication dates after the cutoff are rejected.
 
-Team decisions required before the real freeze: evidence cutoff; the two-year threshold; eligibility of model-release records and digital systems without documented AI; source verification and qualified French review. The revised proposal already specifies gpt-4.1-mini-2025-04-14 with temperature 0; config/proposal-model-settings.json preserves that temperature and adds this implementation's 1500-token output cap. Account access still needs an actual API call. A 2023 operational example needs reconciliation with a late-2026 cutoff under a two-year rule.
+Team decisions required before the real freeze: evidence cutoff; the two-year threshold; eligibility of model-release records and digital systems without documented AI; source verification and qualified French review. The revised proposal already specifies gpt-4.1-mini-2025-04-14 with temperature 0; config/proposal-model-settings.json preserves that temperature and adds this implementation's 1500-token output cap. Account access and a real development call are verified. A 2023 operational example needs reconciliation with a late-2026 cutoff under a two-year rule.
 
 Explicitly unconfirmed candidates are rejected from study freezes. A separately marked development_smoke_test snapshot allows provisional data only in development and cannot be scored as a research evaluation. PDF line wraps are normalized for cue matching without changing the original quoted substring, so a newline between a negation and its stage cue does not discard the negation.
 
@@ -43,6 +43,19 @@ Development labels may inform guide/prompt/rule revisions. Freeze final versions
 The standard-library adapter uses the [OpenAI Responses API structured-output interface](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses). Explicitly choose and verify the model through a development call. No model substitution or outside retrieval is performed. A strict JSON schema requests record ID, label, supporting quote, evidence index, insufficiency reason code and a brief rationale. Exact quotations are checked against the shared context.
 
 Raw responses, actual model identifiers, usage information when returned, request hashes and timestamps are retained. Transient transport/server failures have bounded retries; refusals, truncation or invalid outputs stop the run and remain visible. Resume reuses existing responses and checks the frozen identity. Report failures and interventions; do not silently discard items or resample until an answer looks desirable. A timeout can still have incurred a provider-side call even if no response was received.
+
+## Actual development intervention
+
+The first real model response predicted announced but reflowed a PDF quotation,
+so strict substring validation rejected it. A separately frozen prompt revision
+explicitly requires preserving line breaks and repeated spaces; it changes no
+classification instruction, evidence, split, model setting or rule output.
+The next response predicted announced and quoted the Idarati sentence exactly.
+Both raw responses are retained. This is a development-format intervention,
+not a silent retry, first-attempt success, or evidence of predictive accuracy.
+The rule quotation refers to an adjacent marketplace; this attribution
+limitation remains documented. The revised prompt is the current development
+candidate, not yet a finalized held-out study protocol.
 
 ## Evaluation reporting
 

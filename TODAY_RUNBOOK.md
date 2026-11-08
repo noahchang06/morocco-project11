@@ -1,10 +1,10 @@
 # Xichen：当天完成运行与交付
 
 代码起点：`bab49b1e80754f46b4f09bcaee1e39c3e95144d7`。
-本次修改已通过离线合成测试；没有进行真实 API 调用，没有真实研究成绩。
+25 项离线测试通过；已完成真实模型访问验证和 1 条开发候选的有效 LLM 预测。首次响应因引文换行不匹配被拒绝，另存新 prompt 版本后通过。尚无正式研究成绩，详见 PROGRESS_2026-11-08.md。
 工作分支：`txc701/fair-evaluation`。提交与合并状态以 GitHub PR 为准。
 
-## 现在只收齐这些材料
+## 正式运行所需材料（人工标签仅评分阶段需要）
 
 1. `data/curated/records.jsonl`：已确认 eligibility 的正式记录。
 2. `data/processed/pages.jsonl`：与 quote/offset 对应的原始提取页，不要重新提取后混用旧 offsets。
@@ -12,7 +12,7 @@
 4. `data/gold-test.jsonl`：第三人仲裁后的 test 标签，不能由 LLM 代填。
 5. `data/splits.json`：`{"record-id":"development", "another-id":"test"}`；正式测试须非空且按 organization 隔离。
 6. `data/calibration-ids.json`：已讨论案例的 record_id JSON 数组；同一 organization 的所有记录都必须留在 development。
-7. 团队确认的 cutoff 日期与 outdated 年数。修订 proposal 已指定 `gpt-4.1-mini-2025-04-14`、temperature 0；模型是否可由实际账号调用仍需验证。当前代码按新指南暂用 2 年，不代表团队已批准。
+7. 团队确认的 cutoff 日期与 outdated 年数。修订 proposal 已指定 `gpt-4.1-mini-2025-04-14`、temperature 0；实际账号访问与开发调用已验证。当前代码按新指南暂用 2 年，不代表团队已批准。
 
 每份人工标签最少包含 `record_id` 和 `label`，建议保留 reviewer_id、guide version、rationale、reason_code 和 notes。
 Agreement 要求两人标签 ID 完全相同；gold-test 的 ID 必须与 test split 完全相同。
