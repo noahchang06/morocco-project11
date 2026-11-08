@@ -126,3 +126,8 @@ No open-source license has been assigned; the team should decide licensing befor
 ## Enable GitHub CI
 
 The current GitHub OAuth login lacks the `workflow` scope, so the test workflow is stored as an inactive template. With suitable GitHub permissions, move `ci/github-actions-tests.yml` to `.github/workflows/tests.yml` and commit it to run tests on pushes and pull requests. Local tests do not require GitHub Actions.
+
+
+### Offline completion after human review
+
+The current primary prediction run and its one full technical replication are complete. There is no further API setup step. Use [docs/LABEL_HANDOFF.md](docs/LABEL_HANDOFF.md) for the two-command validation/adjudication/finalization workflow; it consumes genuine independent human exports and existing raw responses. Sections 4.3/4.4 and the exact frozen prompt are in [docs/RESULTS_SECTIONS_DRAFT.md](docs/RESULTS_SECTIONS_DRAFT.md). Human-dependent scores remain pending. Separate OCR and exploratory candidate discovery do not alter the four-record primary test cohort. Current validation: 40 offline tests pass.

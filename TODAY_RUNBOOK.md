@@ -58,3 +58,8 @@ python3 -m unittest discover -s tests -v
 ```
 
 API key 仅存在本地忽略文件/环境变量，不在交付包或仓库中。代码更新在 PR #2，未合并 main。
+
+
+### Offline completion after human review
+
+The current primary prediction run and its one full technical replication are complete. There is no further API setup step. Use [docs/LABEL_HANDOFF.md](docs/LABEL_HANDOFF.md) for the two-command validation/adjudication/finalization workflow; it consumes genuine independent human exports and existing raw responses. Sections 4.3/4.4 and the exact frozen prompt are in [docs/RESULTS_SECTIONS_DRAFT.md](docs/RESULTS_SECTIONS_DRAFT.md). Human-dependent scores remain pending. Separate OCR and exploratory candidate discovery do not alter the four-record primary test cohort. Current validation: 40 offline tests pass.

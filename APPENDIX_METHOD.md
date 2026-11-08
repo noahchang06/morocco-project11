@@ -83,3 +83,10 @@ The paired organization-cluster bootstrap estimates macro-F1 intervals and the m
 | Error inspection | false_operational_audit.jsonl plus human notes |
 
 Do not use synthetic test values. Change this appendix's status to completed research only after the corresponding artifacts exist.
+
+
+## Human handoff implementation
+
+`morocco.finalize prepare` validates both original independent exports and computes pre-adjudication agreement only when all fields are confirmed. Disagreements produce an offline packet with both human annotations and no classifier predictions. `morocco.finalize finalize` requires a distinct adjudicator when necessary, rechecks hashes and quotation provenance, reconstructs accepted outputs and failures from preserved raw responses, and writes a separate human-reviewed snapshot before full-cohort evaluation. It makes no model requests. The generated report sections use only actual human-derived evaluation outputs. See docs/LABEL_HANDOFF.md for exact commands.
+
+Later OCR and six-query exploratory discovery are separate from the original execution protocol. They produced discovery text and three organization-level lead families, not additional held-out predictions. These activities occurred after the primary outputs and must not be presented as preregistered or pooled with the original test sample.
