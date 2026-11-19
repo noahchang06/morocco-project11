@@ -1,8 +1,12 @@
 # Morocco Diplomacy Lab — Project 11
 
-**Current November 8 execution:** [progress](PROGRESS_2026-11-08.md), [handoff](TODAY_RUNBOOK.md), [source protocol](docs/EXECUTION_PROTOCOL_2026-11-08.md), and [appendix](APPENDIX_METHOD.md). Five assistant-screened records were frozen (one development, four held out), with identical information for rules and LLM. Five rule predictions and five primary API responses are saved: four model responses passed validation, one test response failed and is preserved. One authorized complete-cohort replication also yielded four valid outputs and the same test failure; accepted labels matched. Failed outputs remain in eventual full-cohort evaluation. Independent human verification/labels and research scores are pending. All 35 offline tests pass. No per-record predictions or credentials are published here.
+This project evaluates public evidence about the deployment stage of AI applications in Morocco. The [November 9 pilot results](docs/pilot/README.md) cover the 15 supplied records used in the team report. Both classifiers received identical short excerpts and metadata. After one eligibility exclusion, the 14-record comparison yielded four-class macro-F1 of **0.1500 for rules** and **0.4504 for the LLM**. One original review was AI-assisted and provisional. The working reference was adjudicated after prediction inspection, so these scores describe this retrospective sample.
 
-Evidence-grounded classification of publicly documented AI applications in Morocco: **operational**, **pilot**, **announced**, and **insufficiently_supported**. This bounded convenience sample is not a completed benchmark or national deployment census. The sections below retain historical project planning; older extraction counts, test counts and pending-access statements are superseded by the linked execution checkpoint. The inactive GitHub Actions template has not run.
+- [Reported results, confusion matrices and sector analysis](docs/pilot/README.md)
+- [Exact prompt, model settings and the evaluation diagram](docs/pilot/APPENDIX.md)
+- [Aggregate counts](docs/pilot/counts.json) and [offline score calculation](docs/pilot/scorecard.py)
+
+The [November 8 execution checkpoint](PROGRESS_2026-11-08.md) describes an earlier five-record run. The remaining planning and corpus notes below document work at the time of that exercise. The larger, independently labelled benchmark described in the report is a proposed follow-up.
 
 ## How this can be useful in Morocco
 
@@ -48,7 +52,7 @@ Keep screening notes in the team's shared data location, outside Git. For each d
 
 Do not force every document to produce a deployment. “No eligible record” is a valid screening result. Do not force an ambiguous non-deployment document into the `insufficiently_supported` class. For a source with an eligible but weakly supported claim, that class may be appropriate during annotation.
 
-## After the review: specific implementation sequence
+## Original implementation plan
 
 Assignments below are recommendations to confirm as a team, not completed contributions. The first calibration round is development data. Do not report it as a held-out test.
 
@@ -84,7 +88,7 @@ Python 3.12 is the recommended ingestion environment. The recorded extractor is 
 
 ## Obtain and prepare data
 
-Ask the team for the TA's shared document collection. PDFs, extracted text, annotation files, generated review pages and experiment results are intentionally excluded from Git. The generated HTML embeds source text and must not be committed.
+Ask the team for the TA's shared document collection. The team keeps PDFs, extracted text, annotation files, generated review pages and individual model outputs outside Git. The November 9 results directory publishes aggregate counts. The generated HTML embeds source text and must not be committed.
 
 Set the input path to your downloaded folder:
 
@@ -106,7 +110,7 @@ Do not rebuild processed text once annotations reference its offsets without pre
 4. Refine rules and prompt using development data. Freeze inputs and organization-disjoint splits.
 5. Execute an explicitly chosen model externally, import predictions and evaluate against gold labels.
 
-The model integration exports requests and imports validated predictions; it does not call a paid API. There is no embedding index, semantic retrieval or RAG application.
+The freeze exports requests, and `morocco.run_model` can execute them through the Responses API. Existing predictions can also be imported and validated offline.
 
 ## Documentation
 
@@ -125,9 +129,8 @@ No open-source license has been assigned; the team should decide licensing befor
 
 ## Enable GitHub CI
 
-The current GitHub OAuth login lacks the `workflow` scope, so the test workflow is stored as an inactive template. With suitable GitHub permissions, move `ci/github-actions-tests.yml` to `.github/workflows/tests.yml` and commit it to run tests on pushes and pull requests. Local tests do not require GitHub Actions.
+The test workflow is stored as an inactive template at `ci/github-actions-tests.yml`. With suitable GitHub permissions, move `ci/github-actions-tests.yml` to `.github/workflows/tests.yml` and commit it to run tests on pushes and pull requests. Local tests do not require GitHub Actions.
 
+### November 8 five-record run
 
-### Offline completion after human review
-
-The current primary prediction run and its one full technical replication are complete. There is no further API setup step. Use [docs/LABEL_HANDOFF.md](docs/LABEL_HANDOFF.md) for the two-command validation/adjudication/finalization workflow; it consumes genuine independent human exports and existing raw responses. Sections 4.3/4.4 and the exact frozen prompt are in [docs/RESULTS_SECTIONS_DRAFT.md](docs/RESULTS_SECTIONS_DRAFT.md). Human-dependent scores remain pending. Separate OCR and exploratory candidate discovery do not alter the four-record primary test cohort. Current validation: 40 offline tests pass.
+The [label handoff](docs/LABEL_HANDOFF.md) and [earlier report draft](docs/RESULTS_SECTIONS_DRAFT.md) document the independent-review workflow for that cohort. Its first round and technical replication both yielded four valid outputs across the five records. Its four test records have no independent reference scores. The [November 9 results](docs/pilot/README.md) use a separate set of supplied records.

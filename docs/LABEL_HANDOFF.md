@@ -1,4 +1,6 @@
-# Completing the human review and evaluation
+# Independent review for the November 8 five-record run
+
+The [November 9 results](pilot/README.md) use a separate set of supplied reviews.
 
 The current cohort needs two independent human exports, not another model run. No project gold labels or agreement scores exist yet. Keep the private experiment outputs hidden until reference labels are locked.
 

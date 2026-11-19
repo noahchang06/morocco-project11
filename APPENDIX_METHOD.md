@@ -1,4 +1,6 @@
-# Classification implementation and appendix draft
+# November 8 five-record implementation appendix
+
+For the 15 records in the paper, see the [November 9 prompt and pipeline](docs/pilot/APPENDIX.md).
 
 Status: the bounded five-record cohort and shared-input prediction run are described in PROGRESS_2026-11-08.md and docs/EXECUTION_PROTOCOL_2026-11-08.md. There is no human agreement estimate or research performance result. All records remain pending independent human field verification. The exact prompt, settings and outputs are preserved with the experiment artifacts; current software checks are reported in the progress file.
 

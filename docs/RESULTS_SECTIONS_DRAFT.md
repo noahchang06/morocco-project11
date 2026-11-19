@@ -1,5 +1,7 @@
 
- Morocco AI deployment evidence
+> Earlier five-record exercise. The [November 9 pilot](pilot/README.md) contains the results used in the paper.
+
+Morocco AI deployment evidence
 
 Evaluation methods and execution status • Evidence cutoff: 8 November 2026
 
