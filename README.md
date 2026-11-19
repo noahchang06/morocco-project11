@@ -127,9 +127,9 @@ Use a feature branch and pull request for changes. Run the tests before opening 
 
 No open-source license has been assigned; the team should decide licensing before public distribution. Source documents retain their original rights and sharing conditions.
 
-## Enable GitHub CI
+## Tests
 
-The test workflow is stored as an inactive template at `ci/github-actions-tests.yml`. With suitable GitHub permissions, move `ci/github-actions-tests.yml` to `.github/workflows/tests.yml` and commit it to run tests on pushes and pull requests. Local tests do not require GitHub Actions.
+The [GitHub Actions workflow](.github/workflows/tests.yml) runs the offline test suite and generates the public scorecard on Python 3.12 and 3.14. The November 9 study archive stays with the team and can be checked separately using the [archive verification command](docs/pilot/README.md#reproduce-the-tables).
 
 ### November 8 five-record run
 
