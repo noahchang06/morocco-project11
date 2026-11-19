@@ -1,0 +1,56 @@
+{
+  "stage_order": [
+    "operational",
+    "pilot",
+    "announced",
+    "insufficiently_supported"
+  ],
+  "confusion_matrices": {
+    "primary": {
+      "rules": [
+        [0, 0, 0, 3],
+        [0, 0, 0, 2],
+        [0, 0, 0, 3],
+        [0, 0, 0, 6]
+      ],
+      "llm": [
+        [3, 0, 0, 0],
+        [1, 0, 1, 0],
+        [0, 1, 2, 0],
+        [0, 1, 3, 2]
+      ]
+    },
+    "all_15_sensitivity": {
+      "rules": [
+        [0, 0, 0, 3],
+        [0, 0, 0, 2],
+        [0, 0, 0, 3],
+        [0, 0, 0, 7]
+      ],
+      "llm": [
+        [3, 0, 0, 0],
+        [1, 0, 1, 0],
+        [0, 1, 2, 0],
+        [0, 1, 3, 3]
+      ]
+    }
+  },
+  "review_counts": [
+    [3, 0, 0, 0],
+    [0, 1, 0, 1],
+    [0, 0, 1, 1],
+    [0, 0, 1, 6]
+  ],
+  "sectors": {
+    "Agriculture": {"before": 1, "after": 0},
+    "Banking / finance": {"before": 3, "after": 1},
+    "Customs / public finance": {"before": 1, "after": 1},
+    "Education": {"before": 1, "after": 1},
+    "Health": {"before": 2, "after": 2},
+    "Industry / mining": {"before": 1, "after": 1},
+    "Justice": {"before": 1, "after": 0},
+    "Public safety": {"before": 2, "after": 2},
+    "Transport / aviation": {"before": 1, "after": 0},
+    "Transport / rail": {"before": 1, "after": 0}
+  }
+}

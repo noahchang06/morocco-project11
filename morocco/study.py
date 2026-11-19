@@ -3,16 +3,18 @@ import argparse
 import hashlib
 import json
 import re
+from datetime import date
 from pathlib import Path
 
 LABELS = ('operational', 'pilot', 'announced', 'insufficiently_supported')
-RULE_VERSION = 'draft-2'
+RULE_VERSION = 'draft-4-shared-context-wraps'
 CUES = {
     'operational': r'\b(in daily use|in ongoing use|currently uses|currently operates|in production|en production|utilise actuellement|en service)\b',
     'pilot': r'\b(pilot|piloting|trial|testing|pilote|expérimentation|en test)\b',
-    'announced': r'\b(plans to|will deploy|will launch|intend(?:s|ed)? to|planned|prévoit|prévu|prévue|sera déployé|sera déployée|projet de)\b',
+    'announced': r'\b(plans to|will deploy|will launch|intend(?:s|ed)? to|planned|launched|unveiled|prévoit|prévu|prévue|sera déployé|sera déployée|projet de|lancement|a annoncé)\b',
 }
 NEGATION = r"\b(not|never|no longer|pas|jamais|aucun|aucune|sans)\b"
+FUTURE = r'\b(will|plans? to|planned|intended to|prévoit|prévu|prévue|sera|va déployer)\b'
 
 
 def read_jsonl(path):
@@ -48,18 +50,37 @@ def split(records, seed='morocco-pilot-1', test_fraction=.25):
 def baseline(record):
     matches = []
     negated = False
-    for item in record['evidence']:
-        for sentence in re.split(r'(?<=[.!?])\s+|\n+', item['quote']):
-            found = [label for label, pattern in CUES.items() if re.search(pattern, sentence, re.I)]
-            if found and re.search(NEGATION, sentence, re.I):
+    evidence = record['evidence']
+    if record.get('as_of_date'):
+        cutoff = date.fromisoformat(record['as_of_date'])
+        year = cutoff.year - record.get('outdated_years', 2)
+        try:
+            threshold = cutoff.replace(year=year)
+        except ValueError:  # leap day
+            threshold = cutoff.replace(year=year, day=28)
+        dates = [date.fromisoformat(e['source_date']) for e in evidence if e.get('source_date')]
+        if len(dates) == len(evidence) and max(dates) < threshold:
+            return {'record_id': record['record_id'], 'label': 'insufficiently_supported',
+                    'quote': '', 'evidence_index': None, 'reason_code': 'outdated',
+                    'rule_version': RULE_VERSION, 'reason': 'all supplied sources predate the frozen recency threshold'}
+    for index, item in enumerate(evidence):
+        for sentence in re.split(r'(?<=[.!?])\s+', item.get('context', item['quote'])):
+            # PDF line wraps are not sentence boundaries. Match normalized spaces
+            # while retaining the exact source substring for the returned quote.
+            match_text = re.sub(r'\s+', ' ', sentence)
+            found = [label for label, pattern in CUES.items() if re.search(pattern, match_text, re.I)]
+            if found and re.search(NEGATION, match_text, re.I):
                 negated = True
                 continue
-            matches.extend((label, sentence) for label in found)
-    labels = {label for label, _ in matches}
+            if found and re.search(FUTURE, match_text, re.I):
+                found = ['announced']
+            matches.extend((label, sentence, index) for label in found)
+    labels = {label for label, _, _ in matches}
     # Conservative abstention on mixed temporal stages; this draft does not resolve chronology.
     label = next(iter(labels)) if len(labels) == 1 and not negated else 'insufficiently_supported'
-    quote = next((text for stage, text in matches if stage == label), '')
+    quote, index = next(((text, index) for stage, text, index in matches if stage == label), ('', None))
     return {'record_id': record['record_id'], 'label': label, 'quote': quote,
+            'evidence_index': index, 'reason_code': 'ambiguous' if label == 'insufficiently_supported' else None,
             'rule_version': RULE_VERSION, 'reason': 'unique unnegated cue' if quote else 'absent, negated, or conflicting cues'}
 
 

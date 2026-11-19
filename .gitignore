@@ -10,6 +10,7 @@ __pycache__/
 
 # Source corpus, extracted text, annotations and experiment outputs
 /data/
+/tmp/
 /evidence-review.html
 /reviewer-packet*.html
 /reviewer-*.jsonl
